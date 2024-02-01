@@ -13,34 +13,77 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ChatListScreen extends StatelessWidget {
+class ChatListScreen extends StatefulWidget {
+  @override
+  _ChatListScreenState createState() => _ChatListScreenState();
+}
+
+class _ChatListScreenState extends State<ChatListScreen> {
+  List<String> contacts = List.generate(10, (index) => 'Contact $index');
+  List<String> displayedContacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    displayedContacts = List.from(contacts);
+  }
+
+  void filterContacts(String query) {
+    setState(() {
+      displayedContacts = contacts
+          .where((contact) => contact.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      displayedContacts = displayedContacts.take(9).toList(); 
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat App'),
       ),
-      body: ListView.builder(
-        itemCount: 10, 
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage('https://placekitten.com/50/50'), 
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: filterContacts,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
             ),
-            title: Text('Contact $index'),
-            subtitle: Text('Last message...'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ChatScreen(contactName: 'Contact $index')),
-              );
-            },
-          );
-        },
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: displayedContacts.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage('https://placekitten.com/50/50'),
+                  ),
+                  title: Text(displayedContacts[index]),
+                  subtitle: Text('Last message...'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatScreen(contactName: displayedContacts[index])),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
 class ChatScreen extends StatelessWidget {
   final String contactName;
 
