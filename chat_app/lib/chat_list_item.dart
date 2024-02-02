@@ -25,11 +25,22 @@ class ChatListItem extends StatelessWidget {
               ),
             ),
           ),
-          title: Text(contactName),
+          title: Text(
+            contactName,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15, 
+            ),
+          ),
           subtitle: Consumer<MessageProvider>(
             builder: (context, messageProvider, _) {
               String lastMessage = messageProvider.getLastMessage(contactName);
-              return Text(lastMessage.isNotEmpty ? lastMessage : "Начните чат");
+              return Text(
+                lastMessage.isNotEmpty ? lastMessage : "Начните чат",
+                style: TextStyle(
+                  fontSize: 12, 
+                ),
+              );
             },
           ),
           onTap: () {
