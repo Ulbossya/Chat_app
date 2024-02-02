@@ -30,7 +30,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           'Чаты',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 30,
+            fontSize: 32,
           ),
         ),
       ),
