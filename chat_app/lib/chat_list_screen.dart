@@ -6,7 +6,6 @@ class ChatListScreen extends StatefulWidget {
   @override
   _ChatListScreenState createState() => _ChatListScreenState();
 }
-
 class _ChatListScreenState extends State<ChatListScreen> {
   List<String> contacts = [
     'Виктор Власов',

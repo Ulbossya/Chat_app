@@ -1,4 +1,3 @@
-// message_provider.dart
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
@@ -28,4 +27,16 @@ class MessageProvider extends ChangeNotifier {
   bool isCurrentUser(String contactName) {
     return _currentUser == contactName;
   }
+
+  DateTime? getLastMessageTime(String contactName) {
+    final messages = _messages[contactName];
+    if (messages != null && messages.isNotEmpty) {
+      // Возвращаем время последнего сообщения в виде DateTime
+      // Здесь можно использовать какой-то механизм для определения времени сообщения
+      return DateTime.now(); // Замените эту строку на вашу логику получения времени сообщения
+    }
+    return null; // Если нет сообщений, возвращаем null
+  }
 }
+
+
