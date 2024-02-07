@@ -1,8 +1,19 @@
-// chat_screen.dart
+import 'dart:io';
+import 'package:intl/intl.dart';
+import 'package:chat_app/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart'; 
 import 'package:provider/provider.dart';
 import 'message_provider.dart';
-import 'utils.dart';
+
+class Message {
+  final String text;
+  final DateTime time;
+  final bool isCurrentUser;
+
+  Message(this.text, this.time, this.isCurrentUser);
+}
 
 class ChatScreen extends StatefulWidget {
   final String contactName;
@@ -31,16 +42,16 @@ class _ChatScreenState extends State<ChatScreen> {
                 leading: Icon(Icons.photo),
                 title: Text('Фото'),
                 onTap: () {
-                
                   Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
                 },
               ),
               ListTile(
                 leading: Icon(Icons.file_copy),
                 title: Text('Документ'),
                 onTap: () {
-                 
                   Navigator.pop(context);
+                  _pickDocument();
                 },
               ),
             ],
@@ -48,6 +59,25 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       },
     );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await ImagePicker().pickImage(source: source);
+    if (pickedFile != null) {
+      sendMessage(context, pickedFile.path);
+    }
+  }
+
+  Future<void> _pickDocument() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'], 
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      sendMessage(context, file.path);
+    }
   }
 
   @override
@@ -77,7 +107,25 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             SizedBox(width: 4.0),
-            Text(widget.contactName),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.contactName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'В сети',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.0,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -88,16 +136,14 @@ class _ChatScreenState extends State<ChatScreen> {
               color: Colors.grey[200],
               child: Consumer<MessageProvider>(
                 builder: (context, messageProvider, _) {
-                  List<String> messages =
-                      messageProvider.getMessages(widget.contactName) ?? [];
+                  List<Message> messages =
+                      messageProvider.getMessages(widget.contactName)?.map((msg) => Message(msg, DateTime.now(), messageProvider.isCurrentUser(widget.contactName)))?.toList() ?? [];
 
                   return ListView.builder(
                     reverse: true,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      String message = messages[index];
-                      bool isCurrentUser =
-                          messageProvider.isCurrentUser(widget.contactName);
+                      Message message = messages[index];
 
                       return GestureDetector(
                         onTap: () {
@@ -107,44 +153,80 @@ class _ChatScreenState extends State<ChatScreen> {
                           messageFocusNode.unfocus();
                         },
                         child: Row(
-                          mainAxisAlignment: isCurrentUser
+                          mainAxisAlignment: message.isCurrentUser
                               ? MainAxisAlignment.start
                               : MainAxisAlignment.end,
                           children: [
-                            if (!isCurrentUser)
-                        
-                            Container(
-                              margin: EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                                vertical: 4.0,
-                              ),
-                              padding: EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: isCurrentUser
-                                    ? Color.fromRGBO(60, 237, 120, 1)
-                                    : Colors.green,
-                                borderRadius: isCurrentUser
-                                    ? BorderRadius.only(
-                                        topLeft: Radius.circular(8.0),
-                                        topRight: Radius.circular(8.0),
-                                        bottomRight: Radius.circular(8.0),
-                                      )
-                                    : BorderRadius.only(
-                                        topLeft: Radius.circular(8.0),
-                                        topRight: Radius.circular(8.0),
-                                        bottomLeft: Radius.circular(8.0),
+                            if (!message.isCurrentUser)
+                              Container(
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                  vertical: 4.0,
+                                ),
+                                padding: EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(
+                                  color: Color.fromRGBO(60, 237, 120, 1),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(8.0),
+                                    topRight: Radius.circular(8.0),
+                                    bottomLeft: Radius.circular(8.0),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      message.text,
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(0, 82, 28, 1),
+                                        fontSize: 18.0,
                                       ),
-                              ),
-                              child: Text(
-                                message,
-                                style: TextStyle(
-                                  color: isCurrentUser
-                                      ? Colors.white
-                                      : Colors.black,
-                                  fontSize: 18.0,
+                                    ),
+                                    Text(
+                                      DateFormat('HH:mm').format(message.time),
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(0, 82, 28, 1),
+                                        fontSize: 12.0,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
+                            if (message.isCurrentUser)
+                              Container(
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                  vertical: 4.0,
+                                ),
+                                padding: EdgeInsets.all(8.0),
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(8.0),
+                                    topRight: Radius.circular(8.0),
+                                    bottomRight: Radius.circular(8.0),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      message.text,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18.0,
+                                      ),
+                                    ),
+                                    Text(
+                                      DateFormat('HH:mm').format(message.time),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12.0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       );
@@ -214,13 +296,13 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void sendMessage(BuildContext context) {
-    String message = messageController.text;
-    if (message.isNotEmpty) {
+  void sendMessage(BuildContext context, [String? message]) {
+    String text = message ?? messageController.text;
+    if (text.isNotEmpty) {
       MessageProvider messageProvider =
           Provider.of<MessageProvider>(context, listen: false);
 
-      messageProvider.addMessage(widget.contactName, message);
+      messageProvider.addMessage(widget.contactName, text);
 
       setState(() {
         messageController.clear();
